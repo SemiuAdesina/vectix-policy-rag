@@ -1,3 +1,6 @@
+# NumPy <2 for ChromaDB compat (np.float_ removed in NumPy 2)
+numpy<2
+
 # Test
 pytest>=7.0.0
 
