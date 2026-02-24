@@ -1,8 +1,6 @@
 # Production Deployment
 
-**Status:** Not yet deployed.
-
-When deployed, add the shareable URL below for Score 5 (Outstanding) credit.
+**Status:** Deployed on Render.
 
 ---
 
@@ -10,7 +8,7 @@ When deployed, add the shareable URL below for Score 5 (Outstanding) credit.
 
 | App        | URL |
 |-----------|-----|
-| Streamlit | _Add your Streamlit Community Cloud or host URL here_ |
+| Streamlit | https://vectix-policy-rag.onrender.com |
 | API       | _Optional: Add FastAPI base URL if deployed separately_ |
 
 ---
