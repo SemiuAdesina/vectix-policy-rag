@@ -20,6 +20,8 @@ chroma_data/
 # IDE and OS
 .idea/
 .vscode/
+.cursor/
+.cursorrules
 .DS_Store
 
 # Testing / coverage
