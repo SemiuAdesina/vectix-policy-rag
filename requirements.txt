@@ -6,8 +6,8 @@ langchain-core>=0.3.0
 langchain-community>=0.3.0
 langchain-text-splitters>=0.3.0
 
-# Vector storage (LangChain Chroma integration)
-chromadb>=0.4.0
+# Vector storage (LangChain Chroma integration; pin chromadb for Python 3.11 compat)
+chromadb>=0.4.0,<0.5.0
 langchain-chroma>=0.1.0
 
 # LLM (optional; use mock if OPENAI_API_KEY not set)
