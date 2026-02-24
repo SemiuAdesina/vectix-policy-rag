@@ -1,0 +1,48 @@
+{
+  "description": "Seed evaluation questions for RAG. Add more scenario-based (VL-SEC-019/VL-SEC-013) and glossary-based questions before running evaluation.",
+  "groundedness_note": "Answers must cite Policy ID and use exact terminology from Appendix: Definitions where applicable.",
+  "questions": [
+    {
+      "id": "eq-001",
+      "type": "scenario",
+      "policy_hint": "VL-SEC-013 or VL-SEC-019",
+      "question": "What is the failover time if the AWS primary region is unavailable, and who initiates the disaster recovery protocol?",
+      "expected_terms": ["15 minutes", "CTO", "failover", "backup region"]
+    },
+    {
+      "id": "eq-002",
+      "type": "glossary",
+      "policy_hint": "VL-SEC-013",
+      "question": "Where is the designated safe assembly location at the UCH site in case of fire or structural emergency?",
+      "expected_terms": ["muster point", "main parking lot", "Pharmacy Department"]
+    },
+    {
+      "id": "eq-003",
+      "type": "scenario",
+      "policy_hint": "VL-SEC-013",
+      "question": "How often are backups performed, and when is restoration tested?",
+      "expected_terms": ["6 hours", "monthly", "first Sunday", "Restoration"]
+    },
+    {
+      "id": "eq-004",
+      "type": "glossary",
+      "policy_hint": "VL-OPS-003 or VL-OPS-018-CS",
+      "question": "What is the system state for expired or suspect product where the product cannot be dispensed until cleared?",
+      "expected_terms": ["Quarantine Zone"]
+    },
+    {
+      "id": "eq-005",
+      "type": "scenario",
+      "policy_hint": "VL-HR-001",
+      "question": "What are the core hours when employees must be available for synchronous communication, and in which time zone?",
+      "expected_terms": ["10:00 AM", "3:00 PM", "WAT", "West Africa Time"]
+    },
+    {
+      "id": "eq-006",
+      "type": "scenario",
+      "policy_hint": "VL-SEC-019",
+      "question": "What should we do if the Solana RPC endpoint is unreachable or rate-limited, and who owns that scenario?",
+      "expected_terms": ["backup RPC", "Helius", "QuickNode", "env var", "Blockchain Lead"]
+    }
+  ]
+}

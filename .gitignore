@@ -1,0 +1,28 @@
+# Environment and secrets
+.env
+.env.local
+*.key
+*.pem
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# ChromaDB data (optional: ignore if you want to commit a prebuilt index)
+chroma_data/
+
+# IDE and OS
+.idea/
+.vscode/
+.DS_Store
+
+# Testing / coverage
+.pytest_cache/
+.coverage
+htmlcov/
