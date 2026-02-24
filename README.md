@@ -67,7 +67,34 @@ PYTHONPATH=. pytest tests/ -v
 
 ## CI/CD
 
-GitHub Actions runs on every push and pull request: install deps, run `pytest tests/ -v`. See [.github/workflows/main.yml](.github/workflows/main.yml).
+GitHub Actions runs on every push and pull request: install deps, run tests, and (on push to `main`) optionally trigger deployment if a deploy hook is configured.
+
+### Workflow overview
+
+```mermaid
+flowchart LR
+  subgraph trigger["Trigger"]
+    A[Push / PR]
+  end
+  subgraph ci["CI"]
+    B[Checkout]
+    C[Set up Python 3.11]
+    D[Install dependencies]
+    E[Run pytest]
+  end
+  subgraph cd["CD (optional)"]
+    F{Push to main?}
+    G[Trigger deploy hook]
+  end
+  A --> B --> C --> D --> E --> F
+  F -->|Yes + hook set| G
+  F -->|No or no hook| H[End]
+```
+
+- **CI:** On every push and pull request, the workflow checks out the repo, sets up Python 3.11, installs from `requirements.txt`, and runs `pytest tests/ -v`.
+- **CD:** On push to `main` (after tests pass), if the `RENDER_DEPLOY_HOOK` secret is set in the repo, the workflow calls that URL to trigger a deploy (e.g. Render). If the secret is not set, the deploy step is skipped and the workflow still succeeds.
+
+To enable CD: add a **Render** deploy hook (or similar) and set it as the `RENDER_DEPLOY_HOOK` secret in the repo (**Settings → Secrets and variables → Actions**). See [.github/workflows/main.yml](.github/workflows/main.yml).
 
 ## Project layout
 
