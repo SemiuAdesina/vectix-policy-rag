@@ -1,6 +1,9 @@
 # Production Deployment
 
-**Status:** Deployed on Render.
+**Status:** Render deployment target configured.
+
+The deployed experience now has two usable fronts: a polished Streamlit demo UI and a FastAPI root-page chat interface for the assignment’s `/`, `/chat`, and `/health` endpoint contract.
+An automated reachability check from this environment on March 26, 2026 timed out, so verify the public URL once more before final submission.
 
 ---
 

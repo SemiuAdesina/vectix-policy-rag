@@ -1,0 +1,144 @@
+:root {
+  --card: rgba(255,255,255,0.80);
+  --card-strong: rgba(255,255,255,0.92);
+  --paper: #f4efe6;
+  --paper-deep: #ebe3d5;
+  --ink: #131313;
+  --muted: #5f5a52;
+  --line: rgba(19,19,19,0.10);
+  --accent: #0f766e;
+  --accent-soft: rgba(15,118,110,0.12);
+  --accent-alt: #c75b39;
+  --shadow: 0 18px 45px rgba(38,31,22,0.10);
+}
+.stApp {
+  position: relative;
+  background-color: var(--paper);
+  background:
+    linear-gradient(rgba(255,255,255,0.14), rgba(255,255,255,0.14)),
+    linear-gradient(90deg, rgba(19,19,19,0.08) 1px, transparent 1px),
+    linear-gradient(rgba(19,19,19,0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(19,19,19,0.03) 1px, transparent 1px),
+    linear-gradient(rgba(19,19,19,0.03) 1px, transparent 1px),
+    radial-gradient(circle at top left, rgba(15,118,110,0.15), transparent 28%),
+    radial-gradient(circle at top right, rgba(199,91,57,0.15), transparent 26%),
+    linear-gradient(180deg, var(--paper) 0%, var(--paper-deep) 100%);
+  background-size: auto, 120px 120px, 120px 120px, 24px 24px, 24px 24px, auto, auto, auto;
+  background-position: 0 0, -1px -1px, -1px -1px, -1px -1px, -1px -1px, 0 0, 100% 0, 0 0;
+  background-attachment: fixed;
+  color: var(--ink);
+}
+.stApp, .stMarkdown, .stTextInput, .stChatInput {
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+}
+[data-testid="stSidebar"] {
+  background: rgba(255,255,255,0.62);
+  border-right: 1px solid var(--line);
+}
+[data-testid="stSidebar"] * { color: var(--ink); }
+.block-container { padding-top: 2.2rem; padding-bottom: 3rem; max-width: 1180px; }
+.block-container { position: relative; z-index: 1; }
+[data-testid="stAppViewContainer"] {
+  background:
+    linear-gradient(rgba(255,255,255,0.14), rgba(255,255,255,0.14)),
+    linear-gradient(90deg, rgba(19,19,19,0.08) 1px, transparent 1px),
+    linear-gradient(rgba(19,19,19,0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(19,19,19,0.03) 1px, transparent 1px),
+    linear-gradient(rgba(19,19,19,0.03) 1px, transparent 1px),
+    radial-gradient(circle at top left, rgba(15,118,110,0.15), transparent 28%),
+    radial-gradient(circle at top right, rgba(199,91,57,0.15), transparent 26%),
+    linear-gradient(180deg, var(--paper) 0%, var(--paper-deep) 100%);
+  background-size: auto, 120px 120px, 120px 120px, 24px 24px, 24px 24px, auto, auto, auto;
+  background-position: 0 0, -1px -1px, -1px -1px, -1px -1px, -1px -1px, 0 0, 100% 0, 0 0;
+  background-attachment: fixed;
+}
+[data-testid="stAppViewContainer"]::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.12;
+  background-image:
+    linear-gradient(90deg, transparent 0, transparent calc(50% - 1px), rgba(19,19,19,0.07) 50%, transparent calc(50% + 1px), transparent 100%),
+    linear-gradient(transparent 0, transparent calc(50% - 1px), rgba(19,19,19,0.07) 50%, transparent calc(50% + 1px), transparent 100%);
+  background-size: 100% 100%, 100% 100%;
+}
+.hero-shell {
+  padding: 2rem 2rem 1.4rem;
+  border: 1px solid rgba(19,19,19,0.08);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.90), rgba(250,248,242,0.72)),
+    linear-gradient(135deg, rgba(15,118,110,0.08), rgba(199,91,57,0.08));
+  border-radius: 28px;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+.hero-shell::after {
+  content: "";
+  position: absolute;
+  inset: auto -4rem -5rem auto;
+  width: 14rem;
+  height: 14rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(15,118,110,0.18), transparent 68%);
+}
+.eyebrow, .metric-label, .section-kicker, .status-title {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+}
+.eyebrow { display: inline-block; font-size: 0.78rem; color: var(--accent); margin-bottom: 0.85rem; }
+.hero-title { font-size: clamp(2.4rem, 5vw, 4.8rem); line-height: 0.95; margin: 0; letter-spacing: -0.04em; }
+.hero-copy { max-width: 44rem; margin-top: 1rem; color: var(--muted); font-size: 1.02rem; line-height: 1.6; }
+.metric-card, .snippet-card, .status-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px);
+}
+.metric-card { padding: 1rem 1.1rem; min-height: 132px; }
+.metric-label { color: var(--muted); font-size: 0.8rem; margin-bottom: 0.65rem; }
+.metric-value { font-size: 2rem; font-weight: 700; line-height: 1; margin-bottom: 0.45rem; }
+.metric-copy { color: var(--muted); font-size: 0.92rem; line-height: 1.45; }
+.section-kicker { color: var(--accent-alt); font-size: 0.78rem; margin: 2.1rem 0 0.65rem; }
+.source-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem 0.72rem;
+  margin: 0.2rem 0.35rem 0 0;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 0.84rem;
+}
+.snippet-card { padding: 1rem 1rem 0.95rem; margin-bottom: 0.9rem; background: var(--card-strong); }
+.snippet-source {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.8rem;
+  color: var(--accent);
+  margin-bottom: 0.55rem;
+}
+.snippet-body { color: var(--ink); font-size: 0.94rem; line-height: 1.6; }
+.status-card { padding: 1rem 1.1rem; background: rgba(255,255,255,0.72); }
+.status-title { font-size: 0.76rem; color: var(--muted); margin-bottom: 0.5rem; }
+.status-body { color: var(--ink); font-size: 0.95rem; line-height: 1.55; }
+.stChatMessage {
+  background: rgba(255,255,255,0.74);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
+}
+.stChatMessage [data-testid="stMarkdownContainer"] p { color: var(--ink); line-height: 1.65; }
+.stButton > button, .stDownloadButton > button {
+  border-radius: 999px;
+  border: 1px solid rgba(19,19,19,0.08);
+  background: rgba(255,255,255,0.78);
+  color: var(--ink);
+  font-weight: 600;
+  min-height: 2.75rem;
+}
+.stButton > button:hover { border-color: rgba(15,118,110,0.35); color: var(--accent); }

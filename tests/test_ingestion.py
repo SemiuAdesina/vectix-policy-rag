@@ -41,20 +41,37 @@ class TestDocumentLoaderFindsAllMarkdownFiles(TestCase):
                     f"Document {i} should have non-empty content",
                 )
 
-    def test_loader_ignores_non_markdown_files(self) -> None:
-        """Loader returns only .md files; .txt and other extensions are ignored."""
-        # Arrange: directory with 3 .md and 2 .txt
+    def test_loader_supports_markdown_text_and_html_files(self) -> None:
+        """Loader returns supported formats and ignores unsupported ones."""
         with tempfile.TemporaryDirectory() as tmpdir:
             base = Path(tmpdir)
             for i in range(3):
                 (base / f"doc_{i}.md").write_text("# Markdown\n\nBody.", encoding="utf-8")
-            (base / "notes.txt").write_text("Not markdown", encoding="utf-8")
-            (base / "readme.txt").write_text("Also not", encoding="utf-8")
+            (base / "notes.txt").write_text("Plain text policy", encoding="utf-8")
+            (base / "policy.html").write_text("<html><body><h1>HTML Policy</h1><p>Remote work body.</p></body></html>", encoding="utf-8")
+            (base / "ignore.json").write_text('{"skip": true}', encoding="utf-8")
 
             loader = DocumentLoader(directory_path=str(base))
 
-            # Act
             documents = loader.load()
 
-            # Assert: only 3 documents (the .md files)
-            self.assertEqual(len(documents), 3, "Only .md files should be loaded")
+            self.assertEqual(len(documents), 5, "Supported file types should be loaded")
+            contents = [doc.page_content for doc in documents]
+            self.assertTrue(any("Plain text policy" in content for content in contents))
+            self.assertTrue(any("HTML Policy" in content for content in contents))
+
+    def test_load_and_chunk_extracts_policy_id_into_chunk_metadata(self) -> None:
+        """Chunk metadata preserves the policy identifier for citations."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            base = Path(tmpdir)
+            (base / "policy.md").write_text(
+                "# Remote Work Policy\n\n**Policy ID:** VL-HR-001\n\nEmployees must be online during core hours.",
+                encoding="utf-8",
+            )
+
+            loader = DocumentLoader(directory_path=str(base))
+
+            chunks = loader.load_and_chunk()
+
+            self.assertGreaterEqual(len(chunks), 1, "Chunking should return at least one chunk")
+            self.assertEqual(chunks[0].metadata.get("policy_id"), "VL-HR-001")

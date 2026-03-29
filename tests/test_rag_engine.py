@@ -64,6 +64,27 @@ class TestRAGEngine(TestCase):
         self.assertIn("answer", result)
         self.assertEqual(len(result["sources"]), 0)
 
+    def test_hides_sources_when_model_says_context_is_unsupported(self) -> None:
+        """Unsupported answers should not display noisy retrieved citations."""
+        mock_store = MagicMock()
+        mock_store.similarity_search.return_value = [
+            Document(page_content="Remote work policy excerpt.", metadata={"id": "VL-HR-001"}),
+            Document(page_content="Benefits FAQ excerpt.", metadata={"id": "VL-BEN-017"}),
+        ]
+        mock_llm = MagicMock()
+        mock_llm.invoke.return_value = AIMessage(
+            content=(
+                "The provided context does not contain specific information regarding that incident. "
+                "Therefore, I cannot provide an answer based on the available policies."
+            )
+        )
+        engine = RAGEngine(vector_store=mock_store, llm=mock_llm)
+
+        result = engine.ask("What happens if the Solana RPC endpoint is down?", k=2)
+
+        self.assertEqual(result["sources"], [])
+        self.assertEqual(result["chunks"], [])
+
     def test_latency_tracking_records_request(self) -> None:
         """Latency decorator records each request; get_latency_percentiles returns p50/p95."""
         from src.rag_engine import get_latency_percentiles, _latency_ms

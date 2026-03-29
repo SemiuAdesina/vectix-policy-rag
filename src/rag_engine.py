@@ -1,35 +1,42 @@
 """
-RAG (Retrieval-Augmented Generation) engine for VectixLogic policy Q&A.
+RAG engine for VectixLogic policy Q&A.
 
-Orchestrates top-k retrieval, prompt guardrails, and LLM generation.
-Uses dependency injection for vector store and LLM. Tracks latency for p50/p95.
+Orchestrates retrieval, prompting, guardrails, and latency tracking.
 """
 
 import logging
 import time
 from typing import Any, List
 
-from langchain_core.documents import Document
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.runnables import Runnable
 
-logger = logging.getLogger(__name__)
+from src.rag_helpers import (
+    answer_is_unsupported,
+    build_display_chunks,
+    extract_cited_policy_ids,
+    extract_sources,
+    rerank_docs,
+)
 
-# Latency history for p50/p95 (per .cursorrules)
+logger = logging.getLogger(__name__)
 _latency_ms: List[float] = []
+
+SYSTEM_PROMPT = """You answer questions using ONLY the provided policy context. Use exact terminology from the context (e.g. from Appendix: Definitions). Cite the Policy ID (e.g. VL-SEC-019) when you use a policy. If the context does not contain relevant information, say so and do not invent an answer. Keep answers under 300 words."""
 
 
 def _latency_tracker(func: Any) -> Any:
     """Decorator: measure request latency (ms) and log; store for p50/p95."""
+
     def wrapper(self: Any, *args: Any, **kwargs: Any) -> Any:
         start = time.perf_counter()
         try:
-            out = func(self, *args, **kwargs)
-            return out
+            return func(self, *args, **kwargs)
         finally:
             elapsed_ms = (time.perf_counter() - start) * 1000
             _latency_ms.append(elapsed_ms)
             logger.info("rag_request_latency_ms=%.2f", elapsed_ms)
+
     return wrapper
 
 
@@ -37,75 +44,51 @@ def get_latency_percentiles() -> dict:
     """Return p50 and p95 of recorded request latencies (ms)."""
     if not _latency_ms:
         return {"p50_ms": None, "p95_ms": None}
-    s = sorted(_latency_ms)
-    n = len(s)
-    p50 = s[int(0.50 * (n - 1))] if n else None
-    p95 = s[int(0.95 * (n - 1))] if n else None
-    return {"p50_ms": p50, "p95_ms": p95}
-
-
-SYSTEM_PROMPT = """You answer questions using ONLY the provided policy context. Use exact terminology from the context (e.g. from Appendix: Definitions). Cite the Policy ID (e.g. VL-SEC-019) when you use a policy. If the context does not contain relevant information, say so and do not invent an answer. Keep answers under 300 words."""
+    samples = sorted(_latency_ms)
+    size = len(samples)
+    return {
+        "p50_ms": samples[int(0.50 * (size - 1))],
+        "p95_ms": samples[int(0.95 * (size - 1))],
+    }
 
 
 class RAGEngine:
-    """
-    Retrieval-augmented generation for VectixLogic policy corpus.
-
-    Vector store and LLM are injected (no hardcoded connection). Enforces
-    guardrails via system prompt: only use context, exact terminology, refuse out-of-corpus.
-    """
+    """Retrieval-augmented generation for the VectixLogic policy corpus."""
 
     def __init__(self, vector_store: Any, llm: Runnable) -> None:
-        """
-        Initialize the RAG engine.
-
-        Args:
-            vector_store: Must implement similarity_search(query, k).
-            llm: LangChain LLM or runnable (invoke with messages).
-        """
         self._store = vector_store
         self._llm = llm
 
     @_latency_tracker
     def ask(self, query: str, k: int = 4) -> dict:
-        """
-        Retrieve top-k chunks, generate answer with guardrails, return answer and sources.
-
-        Args:
-            query: User question.
-            k: Number of chunks to retrieve.
-
-        Returns:
-            Dict with "answer" (str) and "sources" (list of source identifiers, e.g. Policy ID).
-        """
-        # Retrieve
-        docs = self._store.similarity_search(query, k=k)
+        """Retrieve chunks, generate an answer, and return display-ready evidence."""
+        docs = self._retrieve_docs(query, k)
         if not docs:
             return {
                 "answer": "I have no policy context for that question. Please ask about VectixLogic policies.",
                 "sources": [],
                 "chunks": [],
             }
-        context = "\n\n---\n\n".join(d.page_content for d in docs)
-        sources = _extract_sources(docs)
-        chunks = [{"content": d.page_content, "source": (d.metadata or {}).get("id") or (d.metadata or {}).get("source") or "—"} for d in docs]
+        answer = self._generate_answer(query, docs)
+        if answer_is_unsupported(answer):
+            return {"answer": answer, "sources": [], "chunks": []}
+        cited_sources = extract_cited_policy_ids(answer)
+        sources = cited_sources or extract_sources(docs, preferred=cited_sources)
+        chunks = build_display_chunks(docs, cited_sources=cited_sources, limit=2)
+        return {"answer": answer, "sources": sources, "chunks": chunks}
+
+    def _retrieve_docs(self, query: str, k: int) -> list:
+        """Fetch more than k docs and rerank before generation."""
+        fetch_k = max(k, min(12, k * 3))
+        docs = self._store.similarity_search(query, k=fetch_k)
+        return rerank_docs(query, docs, k)
+
+    def _generate_answer(self, query: str, docs: list) -> str:
+        """Call the LLM with retrieved context and return the answer text."""
+        context = "\n\n---\n\n".join(doc.page_content for doc in docs)
         messages = [
             SystemMessage(content=SYSTEM_PROMPT),
             HumanMessage(content=f"Context:\n{context}\n\nQuestion: {query}"),
         ]
         response = self._llm.invoke(messages)
-        answer = getattr(response, "content", str(response))
-        return {"answer": answer, "sources": sources, "chunks": chunks}
-
-
-def _extract_sources(docs: List[Document]) -> List[str]:
-    """Extract unique source identifiers (Policy ID or source file) from doc metadata."""
-    seen = set()
-    out = []
-    for d in docs:
-        meta = d.metadata or {}
-        sid = meta.get("id") or meta.get("source") or meta.get("policy_id")
-        if sid and sid not in seen:
-            seen.add(sid)
-            out.append(str(sid))
-    return out
+        return getattr(response, "content", str(response))

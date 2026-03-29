@@ -2,7 +2,7 @@
 Vector storage for the VectixLogic policy RAG corpus.
 
 Handles local persistence of embedded policy chunks using ChromaDB via
-LangChain. Uses dependency injection for the embedding function (Embeddings).
+LangChain. Uses dependency injection for the embedding function.
 """
 
 from typing import List
@@ -13,13 +13,7 @@ from langchain_core.embeddings import Embeddings
 
 
 class PolicyVectorStore:
-    """
-    Handles local persistence of embedded policy chunks using ChromaDB.
-
-    Accepts an Embeddings instance via dependency injection (strategy pattern
-    for OpenAI vs HuggingFace). Per .cursorrules: pass the Vector Store into
-    the RAG chain rather than hardcoding the connection.
-    """
+    """Persistent Chroma-backed vector store for policy chunks."""
 
     def __init__(
         self,
@@ -27,14 +21,6 @@ class PolicyVectorStore:
         embedding_function: Embeddings,
         collection_name: str = "vectix_policies",
     ) -> None:
-        """
-        Initialize the vector store.
-
-        Args:
-            persist_directory: Path for ChromaDB persistence.
-            embedding_function: LangChain Embeddings (embed_documents, embed_query).
-            collection_name: Chroma collection name.
-        """
         self.persist_directory = persist_directory
         self.embedding_function = embedding_function
         self.collection_name = collection_name
@@ -45,36 +31,20 @@ class PolicyVectorStore:
         )
 
     def add_documents(self, documents: List[Document]) -> None:
-        """
-        Embeds and adds Document objects to the store.
-
-        Metadata is sanitized for ChromaDB (str, int, float, bool only).
-
-        Args:
-            documents: LangChain Document objects (page_content + metadata).
-        """
+        """Embed and add sanitized documents to the collection."""
         sanitized = [
             Document(
-                page_content=d.page_content,
+                page_content=doc.page_content,
                 metadata={
-                    k: v
-                    for k, v in d.metadata.items()
-                    if isinstance(v, (str, int, float, bool))
+                    key: value
+                    for key, value in (doc.metadata or {}).items()
+                    if isinstance(value, (str, int, float, bool))
                 },
             )
-            for d in documents
+            for doc in documents
         ]
         self._vector_store.add_documents(sanitized)
 
     def similarity_search(self, query: str, k: int = 4) -> List[Document]:
-        """
-        Returns the top-k most relevant Document chunks.
-
-        Args:
-            query: Search query text.
-            k: Number of results to return.
-
-        Returns:
-            List of Document objects (page_content and metadata).
-        """
+        """Return the top-k most relevant chunks."""
         return self._vector_store.similarity_search(query, k=k)

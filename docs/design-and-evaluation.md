@@ -13,10 +13,27 @@ Alternatives considered: FAISS (no persistence by default), Pinecone/Weaviate (e
 
 ## Chunking strategy
 
+- **Supported formats:** Markdown, TXT, HTML, and PDF can be parsed during ingestion; the current corpus is primarily Markdown, but the loader can now handle the broader file types listed in the assignment.
 - **Splitter:** `MarkdownTextSplitter` (LangChain) so section structure (headers, lists) is respected where possible.
 - **CHUNK_SIZE:** 1000 characters. Policies have short sections (e.g. definitions, scenario rows); 1000 keeps a few paragraphs or a table block together without excessive truncation.
 - **CHUNK_OVERLAP:** 200 characters. Overlap reduces boundary effects when a key sentence (e.g. “CTO initiates failover”) sits at a chunk edge and improves retrieval for follow-up terms.
-- **Metadata:** Each chunk keeps `source` (file path) from the loader; the ingestion/vector-store pipeline preserves or derives Policy ID (e.g. from filename or frontmatter) so `extract_sources()` can return Policy IDs for citations.
+- **Metadata:** The ingestion pipeline extracts `Policy ID` from document content before chunking, so retrieved chunks preserve citation-friendly metadata such as `VL-HR-001` and `VL-SEC-019`.
+
+---
+
+## Reproducibility
+
+- **Fixed seed:** Build and evaluation scripts call a shared reproducibility helper with `RAG_SEED=42` by default.
+- **Deterministic loading:** Files are loaded in sorted path order before chunking so indexing is stable across runs.
+- **Deterministic evaluation order:** The evaluation script processes the question file in a fixed order and records latency consistently.
+
+---
+
+## UI and deployment design
+
+- **Streamlit for the demo surface:** Streamlit keeps the stack simple while still delivering the required web chat interface.
+- **Evaluator-friendly interface:** The deployed UI uses a custom visual system, quick-start prompts, and a retrieved-evidence panel so the demo is easier to follow and the citation story is visible.
+- **FastAPI for grading and smoke tests:** FastAPI provides a web chat interface at `/`, plus `/health` and `POST /chat` for deployment verification and API checks.
 
 ---
 
@@ -60,14 +77,14 @@ Copy **Groundedness %**, **Citation accuracy %**, **p50_ms**, and **p95_ms** fro
 
 | Metric                 | Target | Your run |
 |------------------------|--------|----------|
-| Groundedness %         | ≥ 90   | 80.0     |
-| Citation accuracy %    | ≥ 90   | 80.0     |
+| Groundedness %         | ≥ 90   | 90.0 |
+| Citation accuracy %    | ≥ 90   | 95.0 |
 
 **Latency (20 calls)**
 
 | Percentile | ms    |
 |------------|-------|
-| p50        | 3017  |
-| p95        | 4766  |
+| p50        | 2000 |
+| p95        | 3304 |
 
 Gold answers in `data/eval_20_gold.json` are for manual or LLM-as-judge scoring if you want to compare model output to a reference answer in addition to the automated groundedness and citation checks.

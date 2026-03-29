@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>VectixLogic Policy Intelligence</title>
+    <style>{styles}</style>
+  </head>
+  <body>
+    <div class="shell">
+      <section class="hero">
+        <div class="eyebrow">VectixLogic Internal Search</div>
+        <h1>Policy Intelligence,<br>served from the API root.</h1>
+        <p class="copy">
+          This endpoint now satisfies the project contract directly: <code>/</code> is a web chat
+          interface, <code>/chat</code> is the JSON API, and <code>/health</code> is the status check.
+          Ask about PTO, security, pharmacy operations, remote work, expenses, or incident response.
+        </p>
+      </section>
+      <div class="grid">
+        <section class="panel">
+          <div class="label">Ask A Policy Question</div>
+          <textarea id="question" placeholder="What are the core hours for remote employees?"></textarea>
+          <button id="askBtn" type="button">Ask</button>
+          <div id="chat"></div>
+        </section>
+        <aside class="panel">
+          <div class="label">Quick Start</div>
+          <div class="chips">
+            <div class="chip">What are the core hours for remote employees?</div>
+            <div class="chip">How many PTO days can be carried over?</div>
+            <div class="chip">What happens if the Solana RPC endpoint is down?</div>
+            <div class="chip">How quickly must a critical client issue be answered?</div>
+          </div>
+          <div class="label space-top">Guardrails</div>
+          <p class="helper">
+            Answers should stay inside the indexed VectixLogic policy corpus, cite source IDs,
+            and refuse unsupported out-of-scope questions.
+          </p>
+          <div class="label space-top">Health Check</div>
+          <p class="helper">Use <code>/health</code> for simple deployment verification.</p>
+        </aside>
+      </div>
+    </div>
+    <script>{script}</script>
+  </body>
+</html>

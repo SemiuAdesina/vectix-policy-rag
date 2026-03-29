@@ -1,1 +1,1 @@
-"""FastAPI app for VectixLogic Policy RAG."""
+"""FastAPI package for the VectixLogic policy RAG service."""

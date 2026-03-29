@@ -2,13 +2,16 @@
 
 RAG (Retrieval-Augmented Generation) over VectixLogic policy documents for Quantic MSSE. Answers cite Policy IDs (e.g. VL-SEC-019) and use exact terminology from the corpus.
 
+The deployed Streamlit interface is designed for demos: polished visual presentation, quick-start prompts, and an evidence panel that shows the retrieved chunks supporting each answer.
+The FastAPI app also now serves a web chat interface at `/`, so the required `/`, `/chat`, and `/health` contract is satisfied inside one app surface.
+
 ## Install
 
 ```bash
 cd vectix-policy-rag
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
 ## Environment
@@ -26,6 +29,8 @@ Variables (loaded from `.env` via python-dotenv when you run the app or scripts)
 |----------|----------|-------------|
 | **OPENAI_API_KEY** | For real RAG | Enables real embeddings and LLM. If unset, app runs in demo mode with mocks. |
 | **CHROMA_PERSIST_DIR** | No | ChromaDB persistence directory. Default: `chroma_data`. |
+| **OPENAI_CHAT_MODEL** | No | Optional chat model override. Default: `gpt-4o-mini`. |
+| **RAG_SEED** | No | Reproducibility seed used by build/evaluation scripts. Default: `42`. |
 
 ## Build the vector store
 
@@ -35,6 +40,9 @@ Run once after adding or changing policy files in `data/raw/`:
 PYTHONPATH=. python scripts/build_store.py
 ```
 
+The build script recreates the local Chroma store from scratch so repeated builds do not accumulate duplicate chunks.
+The ingestion layer supports Markdown, TXT, HTML, and PDF inputs.
+
 ## Run the app
 
 **Streamlit UI**
@@ -43,12 +51,15 @@ PYTHONPATH=. python scripts/build_store.py
 streamlit run streamlit_app.py
 ```
 
+The UI includes a premium landing section, one-click sample questions, and a retrieved-evidence panel for citation review during demos.
+
 **API (FastAPI)**
 
 ```bash
 uvicorn api.main:app --reload
 ```
 
+- **GET /** → browser-based web chat interface
 - **GET /health** → `{"status": "ok"}`
 - **POST /chat** → body: `{"query": "..."}` → `{"answer": "...", "sources": [...], "chunks": [...]}`
 
@@ -58,11 +69,13 @@ uvicorn api.main:app --reload
 PYTHONPATH=. python scripts/run_evaluation.py
 ```
 
+Evaluation uses a fixed seed (`RAG_SEED`, default `42`) for deterministic local runs where randomness could be introduced.
+
 ## Tests
 
 ```bash
 pip install -r requirements.txt
-PYTHONPATH=. pytest tests/ -v
+PYTHONPATH=. python -m pytest tests/ -v
 ```
 
 ## CI/CD

@@ -1,59 +1,75 @@
 """
-App wiring: build RAGEngine from env (persist dir, OpenAI key).
+Application wiring for the policy RAG app.
 
-Used by Streamlit UI and FastAPI. Uses mock LLM/embeddings if OPENAI_API_KEY not set.
-Loads .env automatically if python-dotenv is installed.
+Builds a RAG engine from environment configuration and falls back to
+mock components when no API key is configured.
 """
 
 import os
 from typing import Any
 
+from langchain_core.messages import AIMessage
+
 try:
     from dotenv import load_dotenv
+
     load_dotenv()
 except ImportError:
     pass
 
-from langchain_core.messages import AIMessage
 
+def _mock_embeddings() -> Any:
+    """Embeddings mock so the app can render without an API key."""
 
-def _mock_embeddings():
-    """Embeddings mock for demo when OPENAI_API_KEY is not set."""
-    class M:
-        def embed_documents(self, texts):
+    class MockEmbeddings:
+        def embed_documents(self, texts: list[str]) -> list[list[float]]:
             return [[0.1] * 1536 for _ in texts]
-        def embed_query(self, text):
+
+        def embed_query(self, text: str) -> list[float]:
             return [0.1] * 1536
-    return M()
+
+    return MockEmbeddings()
 
 
-def _mock_llm():
-    """LLM mock: returns a short message so UI/API work without API key."""
-    class M:
-        def invoke(self, messages):
-            return AIMessage(content="[Demo mode: set OPENAI_API_KEY for real answers.] Answer using the provided policy context only.")
-    return M()
+def _mock_llm() -> Any:
+    """LLM mock that keeps the UI usable in demo mode."""
+
+    class MockLLM:
+        def invoke(self, messages: list[Any]) -> AIMessage:
+            return AIMessage(
+                content=(
+                    "[Demo mode] Set OPENAI_API_KEY for live grounded answers. "
+                    "The interface is ready, but generation is currently mocked."
+                )
+            )
+
+    return MockLLM()
 
 
 def get_engine() -> Any:
-    """
-    Build RAGEngine with vector store (from CHROMA_PERSIST_DIR) and LLM.
-
-    Uses OpenAI embeddings + ChatOpenAI if OPENAI_API_KEY is set;
-    otherwise uses mocks so the app runs for demo.
-    """
+    """Create a configured RAG engine instance."""
     from src.rag_engine import RAGEngine
     from src.vector_store import PolicyVectorStore
 
     persist_dir = os.environ.get("CHROMA_PERSIST_DIR", "chroma_data")
-    key = os.environ.get("OPENAI_API_KEY", "").strip()
-    if key:
+    api_key = os.environ.get("OPENAI_API_KEY", "").strip()
+
+    if api_key:
         from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-        embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
-        llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+
+        embeddings = OpenAIEmbeddings(
+            model="text-embedding-3-small",
+            tiktoken_enabled=False,
+            check_embedding_ctx_length=False,
+        )
+        llm = ChatOpenAI(
+            model=os.environ.get("OPENAI_CHAT_MODEL", "gpt-4o-mini"),
+            temperature=0,
+        )
     else:
         embeddings = _mock_embeddings()
         llm = _mock_llm()
+
     store = PolicyVectorStore(
         persist_directory=persist_dir,
         embedding_function=embeddings,
